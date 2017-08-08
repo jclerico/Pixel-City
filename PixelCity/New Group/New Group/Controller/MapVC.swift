@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreLocation
 
-class MapVC: UIViewController {
+class MapVC: UIViewController, UIGestureRecognizerDelegate {
     
     //Outlets
     @IBOutlet weak var mapView: MKMapView!
@@ -27,7 +27,15 @@ class MapVC: UIViewController {
         mapView.delegate = self
         locationManager.delegate = self
         configureLocationServices()
+        addDoubleTap()
         
+    }
+    
+    func addDoubleTap() {
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(dropPin(sender:)))
+        doubleTap.numberOfTapsRequired = 2
+        doubleTap.delegate = self
+        mapView.addGestureRecognizer(doubleTap)
     }
     
     @IBAction func centerMapBtnWasPressed(_ sender: Any) {
@@ -40,11 +48,35 @@ class MapVC: UIViewController {
     
 }
 
+//Extensions
 extension MapVC: MKMapViewDelegate {
     func centerMapOnUserLocation() {
         guard let coordinate = locationManager.location?.coordinate else { return }
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(coordinate, regionRadius * 2.0, regionRadius * 2.0)
         mapView.setRegion(coordinateRegion, animated: true)
+    }
+    
+    @objc func dropPin(sender: UITapGestureRecognizer) {
+        //Before dropping a pin call removePin (see comments in that func)
+        removePin()
+        //Get screen coordinates where user drops pin
+        let touchPoint = sender.location(in: mapView)
+        //Convert the screen coordinates into GPS Coordinates
+        let touchCoordinate = mapView.convert(touchPoint, toCoordinateFrom: mapView)
+        //Create instance of droppable pin
+        let annotation = DroppablePin(coordinate: touchCoordinate, identifier: "droppablePin")
+        //Add to mapView
+        mapView.addAnnotation(annotation)
+        //Center map on pin when dropped
+        let coordinateRegion = MKCoordinateRegionMakeWithDistance(touchCoordinate, regionRadius * 2.0, regionRadius * 2.0)
+        mapView.setRegion(coordinateRegion, animated: true)
+    }
+    
+    func removePin() {
+        //Only want one pin to show at a time, so when user adds a new one, delete the rest - so only keep latest pin
+        for annotation in mapView.annotations {
+            mapView.removeAnnotation(annotation)
+        }
     }
 }
 
@@ -65,12 +97,4 @@ extension MapVC: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         centerMapOnUserLocation()
     }
-    
-    
-    
-    
-    
-    
-    
-    
 }
