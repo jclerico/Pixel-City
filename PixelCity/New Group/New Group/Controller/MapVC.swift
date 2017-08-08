@@ -14,9 +14,14 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
     
     //Outlets
     @IBOutlet weak var mapView: MKMapView!
+    @IBOutlet weak var pullUpViewHeightConstraint: NSLayoutConstraint!
+    @IBOutlet weak var pullUpView: UIView!
     
     //Variables
     var locationManager = CLLocationManager()
+    var spinner: UIActivityIndicatorView?
+    var progressLbl: UILabel?
+    var screenSize = UIScreen.main.bounds
     
     //Constants
     let authorizationStatus = CLLocationManager.authorizationStatus()
@@ -38,14 +43,42 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
         mapView.addGestureRecognizer(doubleTap)
     }
     
+    func addSwipe() {
+        let swipe = UISwipeGestureRecognizer(target: self, action: #selector(animateViewDown))
+        swipe.direction = .down
+        pullUpView.addGestureRecognizer(swipe)
+    }
+    
+    func animateViewUp() {
+        //When Pin is dropped, it changes the height of the view from 1 to 300, pushing the whole mapView up and showing this view.
+        pullUpViewHeightConstraint.constant = 300
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc func animateViewDown() {
+        //After pin is dropped and view is pushed up, swipe to close it and return map back to normal.
+        pullUpViewHeightConstraint.constant = 0
+        UIView.animate(withDuration: 0.3) {
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    func addSpinner() {
+        spinner = UIActivityIndicatorView()
+        spinner?.center = CGPoint(x: (screenSize.width / 2) - ((spinner?.frame.width)! / 2), y: 150)
+        spinner?.activityIndicatorViewStyle = .whiteLarge
+        spinner?.color = #colorLiteral(red: 0.4078193307, green: 0.4078193307, blue: 0.4078193307, alpha: 1)
+        spinner?.startAnimating()
+        pullUpView.addSubview(spinner!)
+    }
+    
     @IBAction func centerMapBtnWasPressed(_ sender: Any) {
         if authorizationStatus == .authorizedAlways || authorizationStatus == .authorizedWhenInUse {
             centerMapOnUserLocation()
         }
     }
-    
-    
-    
 }
 
 //Extensions
@@ -72,6 +105,12 @@ extension MapVC: MKMapViewDelegate {
     @objc func dropPin(sender: UITapGestureRecognizer) {
         //Before dropping a pin call removePin (see comments in that func)
         removePin()
+        //Pull up the view (see animateViewUp comments)
+        animateViewUp()
+        //Add swipe so you can close animateViewUp()
+        addSwipe()
+        //Add Spinner
+        addSpinner()
         //Get screen coordinates where user drops pin
         let touchPoint = sender.location(in: mapView)
         //Convert the screen coordinates into GPS Coordinates
