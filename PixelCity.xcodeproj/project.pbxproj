@@ -63,7 +63,7 @@
 			children = (
 				00B163AE1F3A14B700B25F2C /* Utilities */,
 				00B163B11F3A14CD00B25F2C /* Extensions */,
-				00B163AF1F3A14B800B25F2C /* View */,
+				00B163B21F3A1CD400B25F2C /* View */,
 				00B163B01F3A14BA00B25F2C /* Controller */,
 				00B1639C1F3A143700B25F2C /* AppDelegate.swift */,
 				00B163A01F3A143700B25F2C /* Main.storyboard */,
@@ -81,14 +81,6 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
-		00B163AF1F3A14B800B25F2C /* View */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = View;
-			path = "New Group/View";
-			sourceTree = "<group>";
-		};
 		00B163B01F3A14BA00B25F2C /* Controller */ = {
 			isa = PBXGroup;
 			children = (
@@ -103,6 +95,13 @@
 			children = (
 			);
 			path = Extensions;
+			sourceTree = "<group>";
+		};
+		00B163B21F3A1CD400B25F2C /* View */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = View;
 			sourceTree = "<group>";
 		};
 		B90915D0AE01ADCBA0B2B369 /* Frameworks */ = {
@@ -393,6 +392,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = VUPUN7YH6F;
 				INFOPLIST_FILE = PixelCity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.JClerico.PixelCity;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -408,6 +408,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				DEVELOPMENT_TEAM = VUPUN7YH6F;
 				INFOPLIST_FILE = PixelCity/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.JClerico.PixelCity;
 				PRODUCT_NAME = "$(TARGET_NAME)";
