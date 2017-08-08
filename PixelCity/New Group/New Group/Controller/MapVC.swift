@@ -27,6 +27,7 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
     var collectionView: UICollectionView?
     var flowLayout = UICollectionViewFlowLayout()
     var imageUrlArray = [String]()
+    var imageArray = [UIImage]()
     
     //Constants
     let authorizationStatus = CLLocationManager.authorizationStatus()
@@ -71,6 +72,8 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
     }
     
     @objc func animateViewDown() {
+        //Cancel all sessions when swipe down
+        cancelAllSessions()
         //After pin is dropped and view is pushed up, swipe to close it and return map back to normal.
         pullUpViewHeightConstraint.constant = 0
         UIView.animate(withDuration: 0.3) {
@@ -96,10 +99,9 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
     func addProgressLbl() {
         progressLbl = UILabel()
         progressLbl?.frame = CGRect(x: (screenSize.width / 2) - 120, y: 175, width: 240, height: 40)
-        progressLbl?.font = UIFont(name: "Avenir Next", size: 18)
+        progressLbl?.font = UIFont(name: "Avenir Next", size: 14)
         progressLbl?.textColor = #colorLiteral(red: 0.4078193307, green: 0.4078193307, blue: 0.4078193307, alpha: 1)
         progressLbl?.textAlignment = .center
-        progressLbl?.text = "12/40 PHOTOS LOADED"
         collectionView?.addSubview(progressLbl!)
     }
     
@@ -144,6 +146,8 @@ extension MapVC: MKMapViewDelegate {
         removeSpinner()
         //Remove Progress Lbl - Same reason as spinner above
         removeProgressLbl()
+        //If Downloading & user places another pin, cancel that session
+        cancelAllSessions()
         //Pull up the view (see animateViewUp comments)
         animateViewUp()
         //Add swipe so you can close animateViewUp()
@@ -163,8 +167,17 @@ extension MapVC: MKMapViewDelegate {
         //Center map on pin when dropped
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(touchCoordinate, regionRadius * 2.0, regionRadius * 2.0)
         mapView.setRegion(coordinateRegion, animated: true)
-        retrieveUrls(forAnnotation: annotation) { (true) in
-            print(self.imageUrlArray)
+        //Retrieve image URLs
+        retrieveUrls(forAnnotation: annotation) { (finished) in
+            if finished {
+                self.retrieveImages(handler: { (finished) in
+                    if finished {
+                        self.removeSpinner()
+                        self.removeProgressLbl()
+                        //reload collectionView
+                    }
+                })
+            }
         }
     }
     
@@ -188,6 +201,30 @@ extension MapVC: MKMapViewDelegate {
                 self.imageUrlArray.append(postUrl)
             }
             handler(true)
+        }
+    }
+    
+    func retrieveImages(handler: @escaping (_ status: Bool) -> ()) {
+        //Clear out each time we call incase it still has images inside it
+        imageArray = []
+        
+        for url in imageUrlArray {
+            Alamofire.request(url).responseImage(completionHandler: { (response) in
+                guard let image = response.result.value else { return }
+                self.imageArray.append(image)
+                self.progressLbl?.text = "\(self.imageArray.count)/40 IMAGES DOWNLOADED"
+                
+                if self.imageArray.count == self.imageUrlArray.count {
+                    handler(true)
+                }
+            })
+        }
+    }
+    
+    func cancelAllSessions() {
+        Alamofire.SessionManager.default.session.getTasksWithCompletionHandler { (sessionDataTask, uploadData, downloadData) in
+            sessionDataTask.forEach({ $0.cancel() })
+            downloadData.forEach({ $0.cancel() })
         }
     }
 }
