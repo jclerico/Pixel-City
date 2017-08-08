@@ -9,6 +9,8 @@
 import UIKit
 import MapKit
 import CoreLocation
+import Alamofire
+import AlamofireImage
 
 class MapVC: UIViewController, UIGestureRecognizerDelegate {
     
@@ -24,6 +26,7 @@ class MapVC: UIViewController, UIGestureRecognizerDelegate {
     var screenSize = UIScreen.main.bounds
     var collectionView: UICollectionView?
     var flowLayout = UICollectionViewFlowLayout()
+    var imageUrlArray = [String]()
     
     //Constants
     let authorizationStatus = CLLocationManager.authorizationStatus()
@@ -160,12 +163,31 @@ extension MapVC: MKMapViewDelegate {
         //Center map on pin when dropped
         let coordinateRegion = MKCoordinateRegionMakeWithDistance(touchCoordinate, regionRadius * 2.0, regionRadius * 2.0)
         mapView.setRegion(coordinateRegion, animated: true)
+        retrieveUrls(forAnnotation: annotation) { (true) in
+            print(self.imageUrlArray)
+        }
     }
     
     func removePin() {
         //Only want one pin to show at a time, so when user adds a new one, delete the rest - so only keep latest pin
         for annotation in mapView.annotations {
             mapView.removeAnnotation(annotation)
+        }
+    }
+    
+    func retrieveUrls(forAnnotation annotation: DroppablePin, handler: @escaping (_ status: Bool) -> ()) {
+        //Clear out each time we call incase it still has photos inside it
+        imageUrlArray = []
+        
+        Alamofire.request(flickrUrl(forApiKey: apiKey, withAnnotation: annotation, andNumberOfPhotos: 40)).responseJSON { (response) in
+            guard let json = response.result.value as? Dictionary<String, AnyObject> else { return }
+            let photosDict = json["photos"] as! Dictionary<String, AnyObject>
+            let photosDictArray = photosDict["photo"] as! [Dictionary<String, AnyObject>]
+            for photo in photosDictArray {
+                let postUrl = "https://farm\(photo["farm"]!).staticflickr.com/\(photo["server"]!)/\(photo["id"]!)_\(photo["secret"]!)_h_d.jpg"
+                self.imageUrlArray.append(postUrl)
+            }
+            handler(true)
         }
     }
 }
