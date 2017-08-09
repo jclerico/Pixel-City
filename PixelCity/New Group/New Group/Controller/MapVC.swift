@@ -247,7 +247,6 @@ extension MapVC: CLLocationManagerDelegate {
 }
 
 extension MapVC: UICollectionViewDelegate, UICollectionViewDataSource {
-    
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return 1
     }
@@ -262,5 +261,12 @@ extension MapVC: UICollectionViewDelegate, UICollectionViewDataSource {
         let imageView = UIImageView(image: imageFromIndex)
         cell.addSubview(imageView)
         return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        //Called when one of the cells are tapped
+        guard let popVC = storyboard?.instantiateViewController(withIdentifier: "PopVC") as? PopVC else { return }
+        popVC.initData(forImage: imageArray[indexPath.row])
+        present(popVC, animated: true, completion: nil)
     }
 }
